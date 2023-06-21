@@ -1,3 +1,5 @@
+package Deck
+
 enum class Suit(val symbol: String) {
     SPADES("\u2660"),
     HEARTS("\u2665"),

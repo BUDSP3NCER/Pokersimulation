@@ -1,3 +1,5 @@
+package Deck
+
 enum class Rank(val symbol: String) {
     TWO("2"),
     THREE("3"),
