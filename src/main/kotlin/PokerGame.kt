@@ -14,20 +14,16 @@ class PokerGame(private val players: List<Player>) {
     private var currentPlayerIndex: Int = 0
     private var currentBetAmount: Int = 0
     private var pot: Int = 0
-    private val initialChipCounts: MutableMap<Player, Int> = mutableMapOf()
+
 
     fun playRound(anteAmount: Int) {
-        saveInitialChipCounts()
-        deck.shuffle()
-        dealCards()
-        payAnte(anteAmount)
-
-
         currentPlayerIndex = 0
         currentBetAmount = 0
-        pot = 0
 
         while (true) {
+
+            println("\nDie Hand beginnt")
+
             val activePlayers = players.filter { it.chips > 0 }
 
             if (activePlayers.size == 1) {
@@ -35,7 +31,23 @@ class PokerGame(private val players: List<Player>) {
                 activePlayers[0].chips += pot
                 break
             }
-
+            // Prüfen, ob Spieler ausscheiden
+            val playersToRemove = activePlayers.filter { it.chips <= 0 }
+            if (playersToRemove.isNotEmpty()) {
+                println("Folgende Spieler scheiden aus:")
+                for (player in playersToRemove) {
+                    activePlayers.remove(player)
+                    println("Spieler ${player.name}")
+                }
+                if (activePlayers.size == 1) {
+                    println("Spieler ${activePlayers[0].name} hat gewonnen!")
+                    activePlayers[0].chips += pot
+                    break
+                }
+            }
+            payAnte(anteAmount)
+            deck.shuffle()
+            dealCards()
             val humanPlayer = activePlayers.first { it is HumanPlayer } as HumanPlayer
             println("Spieler ${humanPlayer.name}, deine Hand: ${humanPlayer.hand}, Chips: ${humanPlayer.chips}")
 
@@ -58,11 +70,9 @@ class PokerGame(private val players: List<Player>) {
 
                 if (action is BetAction) {
                     currentBetAmount = action.amount
-                    currentPlayer.payBet(currentBetAmount)
-                    pot += currentBetAmount
 
                     // Alle KI-Spieler callen den Betrag
-                    for (i in currentPlayerIndex + 1 until currentPlayerIndex - + activePlayers.size) {
+                    for (i in currentPlayerIndex + 1 until currentPlayerIndex + activePlayers.size) {
                         val index = i % activePlayers.size
                         val player = activePlayers[index]
                         if (player is KIPlayer) {
@@ -82,7 +92,7 @@ class PokerGame(private val players: List<Player>) {
                 val humanPlayer = activePlayers.first { it is HumanPlayer } as HumanPlayer
                 val cardIndicesToDiscard = getPlayerCardIndicesToDiscard(humanPlayer)
                 exchangeCards(humanPlayer, cardIndicesToDiscard)
-                println("Deine neuen Karten: ${humanPlayer.hand} - Chipstand: ${humanPlayer.chips}")
+                println("Deine finalen Karten: ${humanPlayer.hand} - Chipstand: ${humanPlayer.chips}")
             }
 
             // Zweite Setzrunde
@@ -107,8 +117,6 @@ class PokerGame(private val players: List<Player>) {
 
                 if (action is BetAction) {
                     currentBetAmount = action.amount
-                    currentPlayer.payBet(currentBetAmount)
-                    pot += currentBetAmount
 
                     // Alle KI-Spieler callen den Betrag
                     for (i in currentPlayerIndex + 1 until currentPlayerIndex + activePlayers.size) {
@@ -121,7 +129,6 @@ class PokerGame(private val players: List<Player>) {
                             println("Spieler ${player.name} callt $callAmount")
                         }
                     }
-
                     break
                 }
             }
@@ -132,6 +139,7 @@ class PokerGame(private val players: List<Player>) {
             if (winner != null) {
                 println("Spieler ${winner.name} hat den Pot gewonnen! Pot: $pot")
                 winner.chips += pot
+                pot = 0
             } else {
                 println("Kein Gewinner in dieser Runde. Der Pot bleibt unverändert: $pot")
             }
@@ -151,14 +159,13 @@ class PokerGame(private val players: List<Player>) {
         }
 
     }
-
     private fun payAnte(anteAmount: Int) {
         for (player in players) {
             player.payAnte(anteAmount)
             pot += anteAmount
+
         }
     }
-
     private fun getWinner(): Player? {
         var bestHand: Hand? = null
         var bestPlayer: Player? = null
@@ -178,24 +185,6 @@ class PokerGame(private val players: List<Player>) {
         }
 
         return bestPlayer
-    }
-
-    private fun resetChipCounts() {
-        for (player in players) {
-            player.chips = initialChipCounts[player] ?: 0
-        }
-    }
-
-
-    private fun allPlayersPaidCurrentBetAmount(): Boolean {
-        return players.all { it.chips == 0 || it is KIPlayer || it is HumanPlayer && it.currentBetAmount == currentBetAmount }
-    }
-
-
-    private fun saveInitialChipCounts() {
-        for (player in players) {
-            initialChipCounts[player] = player.chips
-        }
     }
 
     private fun dealCards() {
@@ -221,6 +210,14 @@ class PokerGame(private val players: List<Player>) {
                         currentBetAmount = betAmount
                         player.payBet(currentBetAmount)
                         pot += currentBetAmount
+                        for (otherPlayer in players.filter { it != player }) {
+                            if (otherPlayer.chips < currentBetAmount) {
+                                val allInAmount = otherPlayer.chips
+                                otherPlayer.payBet(allInAmount)
+                                pot += allInAmount
+                                println("Spieler ${otherPlayer.name} geht All-In mit $allInAmount")
+                            }
+                        }
                         return BetAction(betAmount)
                     }
 
@@ -234,6 +231,14 @@ class PokerGame(private val players: List<Player>) {
                 val callAmount = currentBetAmount - player.currentBetAmount
                 player.payBet(callAmount)
                 pot += callAmount
+                for (otherPlayer in players.filter { it != player }) {
+                    if (otherPlayer.chips < currentBetAmount) {
+                        val allInAmount = otherPlayer.chips
+                        otherPlayer.payBet(allInAmount)
+                        pot += allInAmount
+                        println("Spieler ${otherPlayer.name} geht All-In mit $allInAmount")
+                    }
+                }
                 println("Spieler ${player.name} callt $callAmount")
                 CallAction(callAmount)
             }
@@ -261,7 +266,7 @@ class PokerGame(private val players: List<Player>) {
     }
 
     private fun getPlayerCardIndicesToDiscard(player: HumanPlayer): List<Int> {
-        val validIndices = listOf(0, 1, 2, 3, 4, -1)
+        val validIndices = listOf(0, 1, 2, 3, 4, "keine")
         val input = player.chooseCardsToDiscard()
         return input.filter { it in validIndices }
     }
@@ -310,12 +315,14 @@ class PokerGame(private val players: List<Player>) {
             println("Spieler ${bestPlayer.name} hat gewonnen mit: $bestHand")
             println("Pot: $pot")
 
-            for (player in players) {
-                player.chips = initialChipCounts[player] ?: 0
-            }
+            //for (player in players) {
+            //   player.chips = initialChipCounts[player] ?: 0
+            // }
         }
     }
+    private fun <E> List<E>.remove(player: E) {
 
+    }
     private fun getBestHand(hand: List<Card>): Hand {
         val possibleHands = generatePossibleHands(hand)
         val sortedHands = possibleHands.sortedByDescending { it.rank }

@@ -23,6 +23,7 @@ open class Player(val name: String, var chips: Int) {
         if (chips >= betAmount) {
             chips -= betAmount
         } else {
+
             println("Not enough chips to place the bet.")
 
         }
