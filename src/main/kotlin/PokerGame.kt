@@ -266,7 +266,8 @@ class PokerGame(private val players: List<Player>) {
     }
 
     private fun getPlayerCardIndicesToDiscard(player: HumanPlayer): List<Int> {
-        val validIndices = listOf(0, 1, 2, 3, 4, "keine")
+        val validIndices = listOf(0, 1, 2, 3, 4)
+
         val input = player.chooseCardsToDiscard()
         return input.filter { it in validIndices }
     }

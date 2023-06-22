@@ -33,11 +33,12 @@ Einstellungsmöglichkeiten
 
 TODO´s
 + Fehler die ich nicht mehr abfangen konnte:
-+ wenn KI Spieler weniger Chips hat als die Bet vom HumanPlayer ist, 
-+ zeigt er zwar an das er Allin ist. 
-+ Callt dann dennoch mit der vollen Bet.
+wenn KI Spieler weniger Chips hat als die Bet vom HumanPlayer ist, 
+zeigt er zwar an das er Allin ist. 
+Callt dann dennoch mit der vollen Bet.
 + Im späteren Spielverlauf hängt sich das Spiel in einer Dauerschleife 
   mit Bet / Call bei KIPlayer auf
++ Straight wird nicht korrekt erkannt bei der Gewinnermittlung
 
 ### Welcher Abschnitt hat mich viel Energie gekostet.
 + Das ganze Projekt hat mich viel Energie gekostet! Wenn auch gleich lehrreich!

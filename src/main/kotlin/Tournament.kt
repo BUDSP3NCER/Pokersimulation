@@ -26,10 +26,10 @@ class Tournament(var name: String) {
         println("Bitte gib deinen Namen ein:")
         val playerName = readln()
         val humanPlayer = HumanPlayer(playerName, 10000)
-        val selectedPlayers = mutableListOf(humanPlayer) + kiPlayers.shuffled().take(1)
+        val selectedPlayers = mutableListOf(humanPlayer) + kiPlayers.shuffled().take(5)
 
         println(
-            """Die heutigen Teilnehmen am Turnier:
+            """Die heutigen Teilnehmer am Turnier:
         ⎛¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯⎞
         |  ⎛¯⎞ ⎛¯¯⎞ |/ |¯¯ ⎛¯⎞  |\/| ⎛ ⎞¯||¯ ⎛¯¯ |  |     |
         |  |/  |  | |\ |-- |\   |  | |-| ||  |   |--|     |
